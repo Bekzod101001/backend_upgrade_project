@@ -367,13 +367,21 @@ An artifact can be:
 * an incident investigation;
 * documentation;
 * an interview answer;
-* a small prototype.
+* a small prototype;
+* a written summary of a course lesson or book chapter;
+* any backend task completed at work.
 
-Watching a video is not an artifact.
+A backend task at work counts as an artifact on its own. Real production work with real constraints, real data and real consequences is a different kind of practice than any learning project.
 
-Reading an article is not an artifact.
+When possible, I should leave a short note about it (problem, decision, trade-offs, what went wrong), without copying confidential code or data. These notes are the raw material for my backend stories.
 
-They are i can produce after learning from them.
+A course lesson or book chapter counts as an artifact only when it produces written notes with my own conclusions: what I learned, what I missed, which trade-offs matter, and how it relates to MiniBank.
+
+The lesson should be part of the one structured course or book I am currently following. This is strongly preferred.
+
+A random article or a random video does not count, even if I take notes on it. Otherwise "I read something interesting" slowly replaces actual progress.
+
+Passively watching or reading without written conclusions is not an artifact.
 
 ⸻
 
