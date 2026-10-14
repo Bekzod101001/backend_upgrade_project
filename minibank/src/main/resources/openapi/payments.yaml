@@ -1,0 +1,125 @@
+openapi: 3.0.3
+info:
+  title: MiniBank Payments API
+  description: Оплата сервисов — двухуровневый флоу (Day 17/18)
+  version: 0.1.0
+
+tags:
+  - name: Payments
+    description: Оплата сервисов (коммуналка, мобильная связь и т.п.)
+
+paths:
+  /payments/init:
+    post:
+      tags:
+        - Payments
+      operationId: initPayment
+      summary: Шаг 1 — credentials провайдера
+      description: |
+        Валидирует лицевой счёт у провайдера и создаёт PaymentIntent со статусом CREATED.
+        Возвращаемый paymentId — естественный idempotency key для /confirm (Day 17).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentInitRequest'
+      responses:
+        '200':
+          description: PaymentIntent создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentIntentResponse'
+        '422':
+          description: Провайдер не подтвердил лицевой счёт
+        '500':
+          description: Внутренняя ошибка сервера
+
+  /payments/{id}/confirm:
+    post:
+      tags:
+        - Payments
+      operationId: confirmPayment
+      summary: Шаг 2 — сумма и подтверждение
+      description: |
+        Списывает сумму со счёта и подтверждает платёж. Повторный вызов с тем же id
+        на уже COMPLETED intent — идемпотентный no-op (Day 17/18).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: id, выданный на шаге /payments/init
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmPaymentRequest'
+      responses:
+        '200':
+          description: Платёж подтверждён (или уже был подтверждён ранее)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentIntentResponse'
+        '404':
+          description: PaymentIntent не найден
+        '409':
+          description: Недостаточно средств
+        '500':
+          description: Внутренняя ошибка сервера
+
+components:
+  schemas:
+    PaymentInitRequest:
+      type: object
+      required:
+        - accountId
+        - providerCode
+        - providerAccountNumber
+      properties:
+        accountId:
+          type: integer
+          format: int64
+          example: 1
+        providerCode:
+          type: string
+          example: ELECTRICITY
+        providerAccountNumber:
+          type: string
+          example: "123456789"
+
+    ConfirmPaymentRequest:
+      type: object
+      required:
+        - amount
+      properties:
+        amount:
+          type: integer
+          format: int64
+          description: В тийинах
+          example: 5000000
+
+    PaymentIntentResponse:
+      type: object
+      required:
+        - paymentId
+        - status
+      properties:
+        paymentId:
+          type: string
+          format: uuid
+        providerDisplayName:
+          type: string
+          nullable: true
+        amount:
+          type: integer
+          format: int64
+          nullable: true
+        status:
+          type: string
+          enum: [CREATED, COMPLETED]

@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: minibank
+  datasource:
+    url: jdbc:postgresql://localhost:5432/minibank
+    username: minibank
+    password: minibank
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
+    consumer:
+      # Если закоммиченного offset'а для группы ещё нет — читать с начала лога, а не с конца
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
+      properties:
+        # JsonDeserializer по умолчанию не доверяет никаким пакетам — защита от десериализации чужих классов
+        spring.json.trusted.packages: uz.minibank.*
+        # OutboxRelay публикует уже готовый JSON через голый StringSerializer — заголовка
+        # __TypeId__ там нет (его добавляет только JacksonJsonSerializer). Без дефолтного типа
+        # десериализатор не поймёт, во что превращать байты. Пока в топике один тип события —
+        # это нормально; появится второй, придётся переходить на spring.json.type.mapping по топику
+        spring.json.value.default.type: uz.minibank.transfer.event.TransferCompletedEvent
+
+logging:
+  level:
+    # Всегда видеть SQL, который генерирует Hibernate
+    org.hibernate.SQL: debug
